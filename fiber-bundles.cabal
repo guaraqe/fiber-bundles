@@ -3,10 +3,10 @@ name:
 version:
   0.1.0
 synopsis:
-  Fiber bundles and related algebraic structures
+  Fiber bundles and related algebraic structures.
 description:
-  This package defines a @FiberBundle@ class, and others that allows the
-  manipulation of types as fiber bundles whose fibers have an algebraic
+  This package defines a @FiberBundle@ class and supporting classes that allow
+  the manipulation of types as fiber bundles whose fibers have an algebraic
   structure.
 license:
   BSD3
@@ -22,6 +22,8 @@ cabal-version:
 library
   exposed-modules:
     Data.FiberBundle
+    Data.FiberBundle.Section
+    Data.FiberBundle.Trivial
   build-depends:
     base >= 4.5 && < 4.13,
     containers,

@@ -4,6 +4,6 @@ mkDerivation {
   version = "0.1.0";
   src = ./.;
   libraryHaskellDepends = [ base containers groups ];
-  description = "Fiber bundles";
+  description = "Fiber bundles and related algebraic structures";
   license = stdenv.lib.licenses.bsd3;
 }
