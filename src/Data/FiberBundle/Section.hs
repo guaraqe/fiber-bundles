@@ -2,14 +2,20 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Data.FiberBundle.Section
-  ( BundleSection
+  ( -- * Bundle Sections
+    BundleSection
   , value
+    -- * Construction
   , insert
   , insertLeft
   , insertRight
   , fromList
   , fromListLeft
   , fromListRight
+    -- * Transformation
+  , map
+  , mapMonotonic
+    -- * Destruction
   , toList
   ) where
 
@@ -19,6 +25,7 @@ import Data.Foldable (foldl')
 import Data.Group (Group (..))
 import Data.Map.Strict (Map)
 import Data.Maybe (fromMaybe)
+import Prelude hiding (map)
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Map.Merge.Strict as Map.Merge
@@ -55,7 +62,7 @@ value (BundleSection m) b = fromMaybe (unit b) (Map.lookup b m)
 -- value that is present in the corresponding fiber. Synonym for 'insertLeft',
 -- simplified for when the operation is commutative.
 insert ::
-  (MonoidBundle a, Ord (Base a), Eq a) =>
+  (AbelianBundle a, MonoidBundle a, Ord (Base a), Eq a) =>
   a -> BundleSection a -> BundleSection a
 insert = insertLeft
 
@@ -107,7 +114,7 @@ combineNotNull x y =
 -- same fiber are combined. This is a synonym for 'fromListLeft', simplified
 -- for when the operation is commutative.
 fromList ::
-  (MonoidBundle a, Ord (Base a), Eq a) =>
+  (AbelianBundle a, MonoidBundle a, Ord (Base a), Eq a) =>
   [a] -> BundleSection a
 fromList = fromListLeft
 
@@ -130,6 +137,54 @@ fromListRight = foldl' (flip insertRight) sectionUnit
 -- | Retrieve all the non-unit values for the 'BundleSection'.
 toList :: BundleSection a -> [a]
 toList (BundleSection m) = Map.elems m
+
+-- | Maps a 'BundleSection' from a 'MonoidBundle' to another. The function @map
+-- g f@ only makes sense if @g@ and @f@ constitute a /fiber bundle morphism/.
+-- That is, the mapping preserves fibers:
+--
+-- @
+--     g . base = base . f
+--
+--              f
+--      a ------------> b
+--      |               |
+-- base |               | base
+--      V               V
+--   Base a --------> Base b
+--              g
+-- @
+--
+-- Furthermore, we expect the function @f@ to be an /abelian monoid morphism/
+-- in each fiber. The "abelian" part is due to the fact that there is no
+-- guarantee on the order on which fibers are combined.
+--
+-- WARNING: This function can error if the fiber bundle morphism precondition
+-- is not satisfied.
+map ::
+  (AbelianBundle b, MonoidBundle b, Ord (Base b), Eq b) =>
+  (Base a -> Base b) -> (a -> b) -> BundleSection a -> BundleSection b
+map b f (BundleSection m) =
+    BundleSection $
+    Map.filter (not . isUnit) $
+    Map.mapKeysWith unsafeCombine b $
+    Map.map f m
+
+-- | The same as 'map', but for base mappings which are monotonic. In this case
+-- the mapping between fibers is injective. Therefore, the "abelian" requisite
+-- can be dropped.
+mapMonotonic ::
+  (MonoidBundle b, Ord (Base b), Eq b) =>
+  (Base a -> Base b) -> (a -> b) -> BundleSection a -> BundleSection b
+mapMonotonic b f (BundleSection m) =
+    BundleSection $
+    Map.mapKeysMonotonic b $
+    Map.mapMaybe f' m
+  where
+    f' x =
+      let
+        y = f x
+      in
+        if isUnit y then Nothing else Just y
 
 --------------------------------------------------------------------------------
 -- Instance helpers
