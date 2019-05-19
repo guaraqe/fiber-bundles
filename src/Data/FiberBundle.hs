@@ -14,7 +14,7 @@ module Data.FiberBundle
   , GroupBundle (..)
     -- * Abelian Bundle
   , AbelianBundle
-    -- * BundleMorphism
+    -- * Bundle Morphism
   , BundleMorphism (..)
   , monoidBundleMorphism
     -- * QuickCheck Properties
