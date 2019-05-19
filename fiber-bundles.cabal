@@ -5,15 +5,19 @@ version:
 synopsis:
   Fiber bundles and related algebraic structures.
 description:
-  This package defines a @FiberBundle@ class and supporting classes that allow
-  the manipulation of types as fiber bundles whose fibers have an algebraic
-  structure.
+  This package defines @FiberBundle@s with and without algebraic structures on
+  its fibers. It also defines a data structure for fiber bundle sections, which
+  have a more familiar algebraic structure.
 license:
   BSD3
+license-file:
+  LICENSE
 author:
   Juan Raphael Diaz Simões
 maintainer:
   mail@guaraqe.gq
+category:
+  Algebra, Math
 build-type:
   Simple
 cabal-version:
