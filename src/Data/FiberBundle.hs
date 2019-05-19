@@ -1,6 +1,20 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 
+{-| This library defines /fiber bundles/. Fiber bundles can be seen as a set of
+    /fibers/ that have similar structure. These fibers are indexed by a set,
+    called the /base space/.
+
+    This is a structure that is well adapted to many cases where one almost
+    have an algebraic structure, except for some information in the type, which
+    must match for the algebraic operation to happen.
+
+    A good example is money. One can add @1 EUR@ to @1 EUR@, but not to @1
+    USD@. That is, one can add the quantities, provided that the currencies are
+    equals. This means that one can give money the structure of a fiber bundle
+    whose base space is a set of currencies.
+-}
+
 module Data.FiberBundle
   ( -- * Fiber Bundle
     FiberBundle (..)
@@ -37,10 +51,15 @@ import Data.Maybe (fromJust)
 --------------------------------------------------------------------------------
 -- Fiber Bundle
 
--- | A 'FiberBundle' is a type @a@ together with another type @'Base' a@ such
--- that there is a mapping from any element of @a@ to an element of @'Base' a@.
--- Therefore, one can see @a@ as a set of /fibers/: for each @b :: 'Base' a@
--- there is a set @[a | 'base' a == b]@, the /fiber/ at @b@.
+-- | A 'FiberBundle' is composed of:
+--
+-- - a type @a@, called the /fiber space/
+-- - a type @'Base' a@, called the /base space/
+-- - a mapping @'base' : a -> 'Base'@ that maps each point to its corresponding
+--   base.
+--
+-- The /fiber/ at @b :: 'Base' a@ is the set of all elements @x :: a@ such that
+-- @base x = b@.
 class FiberBundle a where
   type Base a :: *
   base :: a -> Base a
