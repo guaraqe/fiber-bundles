@@ -14,6 +14,9 @@ module Data.FiberBundle
   , GroupBundle (..)
     -- * Abelian Bundle
   , AbelianBundle
+    -- * BundleMorphism
+  , BundleMorphism (..)
+  , monoidBundleMorphism
     -- * QuickCheck Properties
   , prop_SemigroupBundle_combine_base
   , prop_SemigroupBundle_combine_associative
@@ -23,6 +26,10 @@ module Data.FiberBundle
   , prop_GroupBundle_inverse_combine_left
   , prop_GroupBundle_inverse_combine_right
   , prop_AbelianBundle_combine_commutative
+  , prop_BundleMorphism_fiber_preserving
+  , prop_BundleMorphism_semigroup
+  , prop_BundleMorphism_monoid
+  , prop_BundleMorphism_group
   ) where
 
 import Data.Maybe (fromJust)
@@ -186,4 +193,68 @@ prop_AbelianBundle_combine_commutative ::
 prop_AbelianBundle_combine_commutative x y =
     combine x y == combine y x
 
+--------------------------------------------------------------------------------
+-- Fiber Bundle Morphisms
 
+-- | A morphism between two 'FiberBundle's is a pair @'BundleMorphism' f g@
+-- that preserves fibers. That is, the following diagram commute:
+--
+-- @
+--     g . base = base . f
+--
+--              f
+--      a ------------> b
+--      |               |
+-- base |               | base
+--      V               V
+--   Base a --------> Base b
+--              g
+-- @
+--
+--
+-- This morphism can have extra properties, such as preserving the 'Semigroup',
+-- 'Monoid' or 'Group' structure of fibers. See the corresponding QuickCheck
+-- properties below for more details.
+--
+-- One of the uses of 'BundleMorphism's is mapping 'Section's from
+-- 'Data.FiberBundle.Section'.
+data BundleMorphism a b = BundleMorphism (a -> b) (Base a -> Base b)
+
+-- | In a 'MonoidBundle' any function @a -> b@ has a corresponding function
+-- @Base a -> Base b@, namely @base . f . unit@. This pair corresponds to a
+-- lawful 'BundleMorphism' if:
+--
+-- @
+-- base . f . unitOf = base . f
+-- @
+monoidBundleMorphism ::
+  (MonoidBundle a, FiberBundle b) => (a -> b) -> BundleMorphism a b
+monoidBundleMorphism f = BundleMorphism f (base . f . unit)
+
+-- | Checks that the 'BundleMorphism' preserves fibers.
+prop_BundleMorphism_fiber_preserving ::
+  (FiberBundle a, FiberBundle b, Eq (Base b)) =>
+  BundleMorphism a b -> a -> Bool
+prop_BundleMorphism_fiber_preserving (BundleMorphism f g) x =
+  g (base x) == base (f x)
+
+-- | Checks that the 'BundleMorphism' preserves 'combine'.
+prop_BundleMorphism_semigroup ::
+  (SemigroupBundle a, SemigroupBundle b, Eq b) =>
+  BundleMorphism a b -> a -> a -> Bool
+prop_BundleMorphism_semigroup (BundleMorphism f _) x y =
+  combine (f x) (f y) == fmap f (combine x y)
+
+-- | Checks that the 'BundleMorphism' preserves the 'unit' of each fiber.
+prop_BundleMorphism_monoid ::
+  (MonoidBundle a, MonoidBundle b, Eq b) =>
+  BundleMorphism a b -> Base a -> Bool
+prop_BundleMorphism_monoid (BundleMorphism f g) x =
+  f (unit x) == unit (g x)
+
+-- | Checks that the 'BundleMorphism' preserves 'inverse'.
+prop_BundleMorphism_group ::
+  (GroupBundle a, GroupBundle b, Eq b) =>
+  BundleMorphism a b -> a -> Bool
+prop_BundleMorphism_group (BundleMorphism f _) x =
+  inverse (f x) == f (inverse x)

@@ -138,46 +138,32 @@ fromListRight = foldl' (flip insertRight) sectionUnit
 toList :: BundleSection a -> [a]
 toList (BundleSection m) = Map.elems m
 
--- | Maps a 'BundleSection' from a 'MonoidBundle' to another. The function @map
--- g f@ only makes sense if @g@ and @f@ constitute a /fiber bundle morphism/.
--- That is, the mapping preserves fibers:
+-- | Maps a 'BundleSection' from a 'MonoidBundle' to another. We expect the
+-- 'BundleMorphism' to be a /monoid morphism/ in each fiber.
 --
--- @
---     g . base = base . f
+-- Also, @b@ should be an 'AbelianBundle' since there is no guarantee on the
+-- order on which fibers are combined.
 --
---              f
---      a ------------> b
---      |               |
--- base |               | base
---      V               V
---   Base a --------> Base b
---              g
--- @
---
--- Furthermore, we expect the function @f@ to be an /abelian monoid morphism/
--- in each fiber. The "abelian" part is due to the fact that there is no
--- guarantee on the order on which fibers are combined.
---
--- WARNING: This function can error if the fiber bundle morphism precondition
--- is not satisfied.
+-- WARNING: This function can error if the 'BundleMorphism' is not lawful.
 map ::
   (AbelianBundle b, MonoidBundle b, Ord (Base b), Eq b) =>
-  (Base a -> Base b) -> (a -> b) -> BundleSection a -> BundleSection b
-map b f (BundleSection m) =
+  BundleMorphism a b -> BundleSection a -> BundleSection b
+map (BundleMorphism f g) (BundleSection m) =
     BundleSection $
     Map.filter (not . isUnit) $
-    Map.mapKeysWith unsafeCombine b $
+    Map.mapKeysWith unsafeCombine g $
     Map.map f m
 
--- | The same as 'map', but for base mappings which are monotonic. In this case
--- the mapping between fibers is injective. Therefore, the "abelian" requisite
--- can be dropped.
+-- | The same as 'map', but in the case where the 'Base' part of the
+-- 'BundleMorphism' is monotonic. In this case the mapping between fibers is
+-- injective. Therefore, there is no combination of different fibers and the
+-- 'AbelianBundle' requisite can be dropped.
 mapMonotonic ::
   (MonoidBundle b, Ord (Base b), Eq b) =>
-  (Base a -> Base b) -> (a -> b) -> BundleSection a -> BundleSection b
-mapMonotonic b f (BundleSection m) =
+  BundleMorphism a b -> BundleSection a -> BundleSection b
+mapMonotonic (BundleMorphism f g) (BundleSection m) =
     BundleSection $
-    Map.mapKeysMonotonic b $
+    Map.mapKeysMonotonic g $
     Map.mapMaybe f' m
   where
     f' x =
