@@ -216,8 +216,8 @@ prop_AbelianBundle_combine_commutative x y =
 -- 'Monoid' or 'Group' structure of fibers. See the corresponding QuickCheck
 -- properties below for more details.
 --
--- One of the uses of 'BundleMorphism's is mapping 'Section's from
--- 'Data.FiberBundle.Section'.
+-- One of the uses of 'BundleMorphism's to map between
+-- 'Data.FiberBundle.Section.Section's.
 data BundleMorphism a b = BundleMorphism (a -> b) (Base a -> Base b)
 
 -- | In a 'MonoidBundle' any function @a -> b@ has a corresponding function
